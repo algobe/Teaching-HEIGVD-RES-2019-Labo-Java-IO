@@ -7,10 +7,9 @@ import ch.heigvd.res.labio.interfaces.IFileExplorer;
 import ch.heigvd.res.labio.interfaces.IFileVisitor;
 import ch.heigvd.res.labio.quotes.QuoteClient;
 import ch.heigvd.res.labio.quotes.Quote;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -90,7 +89,7 @@ public class Application implements IApplication {
        * one method provided by this class, which is responsible for storing the content of the
        * quote in a text file (and for generating the directories based on the tags).
        */
-      storeQuote(quote, "quote-" + i + ".utf8");
+      storeQuote(quote, "quote-" + (i + 1) + ".utf8");
       LOG.info("Received a new joke with " + quote.getTags().size() + " tags.");
       for (String tag : quote.getTags()) {
         LOG.info("> " + tag);
@@ -124,8 +123,34 @@ public class Application implements IApplication {
    * @throws IOException 
    */
   void storeQuote(Quote quote, String filename) throws IOException {
-    throw new UnsupportedOperationException("The student has not implemented this method yet.");
+    StringBuilder filepath = new StringBuilder(WORKSPACE_DIRECTORY).append("/");
+
+    // Sub-folders depending on tags
+    for (String tag : quote.getTags()) {
+      filepath.append(tag).append("/");
+    }
+
+    // Create file dir
+    File dir = new File(filepath.toString());
+    if (!dir.exists() && dir.mkdirs())
+      LOG.info(filepath + " created");
+
+    // Create file
+    filepath.append(filename);
+    File file = new File(filepath.toString());
+
+    if (!file.exists() && file.createNewFile())
+      LOG.info(filepath + " created");
+
+    // Write into file
+    Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+    writer.write(quote.getQuote());
+    writer.flush();
+    writer.close();
+    LOG.info("Quote written");
+  //throw new UnsupportedOperationException("The student has not implemented this method yet.");
   }
+
   
   /**
    * This method uses a IFileExplorer to explore the file system and prints the name of each
