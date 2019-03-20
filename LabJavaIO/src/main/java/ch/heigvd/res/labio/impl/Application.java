@@ -138,7 +138,6 @@ public class Application implements IApplication {
     // Create file
     filepath.append(filename);
     File file = new File(filepath.toString());
-
     if (!file.exists() && file.createNewFile())
       LOG.info(filepath + " created");
 
@@ -166,6 +165,11 @@ public class Application implements IApplication {
          * of the the IFileVisitor interface inline. You just have to add the body of the visit method, which should
          * be pretty easy (we want to write the filename, including the path, to the writer passed in argument).
          */
+        try {
+          writer.write(file.getPath());
+        } catch (IOException ex) {
+          LOG.log(Level.SEVERE, null, ex);
+        }
       }
     });
   }
