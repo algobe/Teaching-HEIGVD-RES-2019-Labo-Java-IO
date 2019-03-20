@@ -1,5 +1,7 @@
 package ch.heigvd.res.labio.impl.filters;
 
+import ch.heigvd.res.labio.impl.Utils;
+
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -16,6 +18,8 @@ import java.util.logging.Logger;
  * @author Olivier Liechti
  */
 public class FileNumberingFilterWriter extends FilterWriter {
+  private int lineNumber = 0;
+  private boolean writeNewLine = true;
 
   private static final Logger LOG = Logger.getLogger(FileNumberingFilterWriter.class.getName());
 
@@ -25,17 +29,46 @@ public class FileNumberingFilterWriter extends FilterWriter {
 
   @Override
   public void write(String str, int off, int len) throws IOException {
-    super.write(str, off, len);
+    String[] lineSplit = Utils.getNextLine(str.substring(off, off + len));
+    if (writeNewLine) {
+      writeLineBeginning();
+    }
+
+    while (!lineSplit[0].equals("")) {
+      String newLine = lineSplit[0] + getLineBeginning();
+      super.write(newLine, 0, newLine.length());
+
+      lineSplit = Utils.getNextLine(lineSplit[1]);
+    }
+
+    super.write(lineSplit[1], 0, lineSplit[1].length());
   }
 
   @Override
   public void write(char[] cbuf, int off, int len) throws IOException {
-    super.write(cbuf, off, len);
+    for (char c : cbuf) {
+      write((int) c);
+    }
   }
 
   @Override
   public void write(int c) throws IOException {
+    if (writeNewLine && c != '\n') {
+      writeLineBeginning();
+    } else if (c == '\r' || c == '\n') {
+      writeNewLine = true;
+    }
     super.write(c);
+  }
+
+  private void writeLineBeginning() throws IOException {
+    String newLine = getLineBeginning();
+    super.write(newLine, 0, newLine.length());
+    writeNewLine = false;
+  }
+
+  private String getLineBeginning() {
+    return ++lineNumber + "\t";
   }
 
 }
